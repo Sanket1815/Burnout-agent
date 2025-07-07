@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { dbHelpers } from '@/lib/db-helpers';
 import { BurnoutScore, WorkPatternData, JournalEntry } from '@/lib/types';
+import { apiService } from '@/lib/api';
 
 interface RealtimeData {
   burnoutScore: BurnoutScore | null;
@@ -30,68 +30,73 @@ export function useRealtime(userId: string | null) {
     try {
       setData(prev => ({ ...prev, isConnected: true }));
 
-      // Load latest burnout score
-      const latestScore = await dbHelpers.getLatestBurnoutScore(userId);
-      if (latestScore) {
-        setData(prev => ({
-          ...prev,
-          burnoutScore: {
-            overall: latestScore.overall_score,
-            risk_level: latestScore.risk_level as 'low' | 'moderate' | 'high',
-            factors: {
-              work_hours: latestScore.work_hours_score,
-              email_stress: latestScore.email_stress_score,
-              meeting_load: latestScore.meeting_load_score,
-              break_frequency: latestScore.break_frequency_score,
-              sentiment: latestScore.sentiment_score
-            },
-            trend: {
-              direction: latestScore.trend_direction as 'up' | 'down' | 'stable',
-              percentage: latestScore.trend_percentage
-            },
-            last_updated: latestScore.created_at
-          }
-        }));
+      // Load burnout metrics
+      try {
+        const metricsResponse = await apiService.getBurnoutMetrics();
+        if (metricsResponse.success && metricsResponse.data) {
+          const metrics = metricsResponse.data;
+          setData(prev => ({
+            ...prev,
+            burnoutScore: {
+              overall: metrics.score,
+              risk_level: metrics.risk_level as 'low' | 'moderate' | 'high',
+              factors: metrics.factors,
+              trend: metrics.trend,
+              last_updated: metrics.last_updated
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading burnout metrics:', error);
       }
 
-      // Load recent work patterns (last 7 days)
-      const endDate = new Date().toISOString().split('T')[0];
-      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const patterns = await dbHelpers.getWorkPatterns(userId, startDate, endDate);
-      
+      // Load journal entries
+      try {
+        const journalResponse = await apiService.getJournalEntries(5);
+        if (journalResponse.success && journalResponse.data) {
+          setData(prev => ({
+            ...prev,
+            recentJournals: journalResponse.data.entries.map((j: any) => ({
+              id: j.id,
+              user_id: userId,
+              content: j.content,
+              sentiment_score: j.sentiment_score,
+              sentiment_label: j.sentiment_label as 'positive' | 'neutral' | 'negative',
+              ai_insights: j.ai_insights || [],
+              word_count: j.content.split(/\s+/).length,
+              created_at: j.created_at,
+              updated_at: j.created_at
+            }))
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading journal entries:', error);
+      }
+
+      // Generate mock work patterns for demo
+      const mockPatterns: WorkPatternData[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        mockPatterns.push({
+          date: date.toISOString().split('T')[0],
+          work_hours: 7 + Math.random() * 3,
+          meeting_count: Math.floor(Math.random() * 8) + 2,
+          meeting_duration: Math.random() * 4 + 1,
+          email_sent: Math.floor(Math.random() * 20) + 5,
+          email_received: Math.floor(Math.random() * 50) + 10,
+          break_count: Math.floor(Math.random() * 5) + 1,
+          break_duration: Math.random() * 60 + 15,
+          after_hours_activity: Math.random() > 0.7
+        });
+      }
+
       setData(prev => ({
         ...prev,
-        workPatterns: patterns.map(p => ({
-          date: p.date,
-          work_hours: p.work_hours,
-          meeting_count: p.meeting_count,
-          meeting_duration: p.meeting_duration,
-          email_sent: p.email_sent,
-          email_received: p.email_received,
-          break_count: p.break_count,
-          break_duration: p.break_duration,
-          after_hours_activity: p.after_hours_activity
-        }))
+        workPatterns: mockPatterns,
+        lastUpdate: new Date()
       }));
 
-      // Load recent journal entries
-      const journals = await dbHelpers.getJournalEntries(userId, 5);
-      setData(prev => ({
-        ...prev,
-        recentJournals: journals.map(j => ({
-          id: j.id,
-          user_id: j.user_id,
-          content: j.content,
-          sentiment_score: j.sentiment_score,
-          sentiment_label: j.sentiment_label as 'positive' | 'neutral' | 'negative',
-          ai_insights: j.ai_insights || [],
-          word_count: j.word_count,
-          created_at: j.created_at,
-          updated_at: j.updated_at
-        }))
-      }));
-
-      setData(prev => ({ ...prev, lastUpdate: new Date() }));
     } catch (error) {
       console.error('Error loading initial data:', error);
       setData(prev => ({ ...prev, isConnected: false }));

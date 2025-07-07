@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { authHelpers, AuthError } from '@/lib/auth';
-import { sessionHelpers } from '@/lib/session';
 import { User, AuthContextType } from '@/lib/types';
+import { apiService } from '@/lib/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,9 +17,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const initializeAuth = async () => {
     try {
-      const session = await sessionHelpers.validateSession();
-      if (session) {
-        setUser(session.user);
+      if (typeof window !== 'undefined') {
+        const session = localStorage.getItem('auth_session');
+        if (session) {
+          const parsedSession = JSON.parse(session);
+          if (parsedSession.user && parsedSession.token) {
+            setUser(parsedSession.user);
+          }
+        }
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
@@ -31,31 +35,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const { user, token } = await authHelpers.signIn(email, password);
+      const response = await apiService.login({ email, password });
       
-      // Store session
-      sessionHelpers.setSession({ user, token });
-      setUser(user);
-    } catch (error) {
-      if (error instanceof AuthError) {
-        throw error;
+      if (response.success && response.data) {
+        const { user, token } = response.data;
+        
+        // Store session
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_session', JSON.stringify({ user, token }));
+        }
+        setUser(user);
+      } else {
+        throw new Error('Login failed');
       }
-      throw new AuthError('Login failed');
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed');
     }
   };
 
   const signup = async (name: string, email: string, password: string) => {
     try {
-      const { user, token } = await authHelpers.signUp(name, email, password);
+      const response = await apiService.signup({ name, email, password });
       
-      // Store session
-      sessionHelpers.setSession({ user, token });
-      setUser(user);
-    } catch (error) {
-      if (error instanceof AuthError) {
-        throw error;
+      if (response.success && response.data) {
+        const { user, token } = response.data;
+        
+        // Store session
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_session', JSON.stringify({ user, token }));
+        }
+        setUser(user);
+      } else {
+        throw new Error('Signup failed');
       }
-      throw new AuthError('Signup failed');
+    } catch (error: any) {
+      throw new Error(error.message || 'Signup failed');
     }
   };
 
@@ -66,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      sessionHelpers.clearSession();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_session');
+      }
       setUser(null);
     } catch (error) {
       console.error('Error during logout:', error);
@@ -75,11 +91,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshAuth = async () => {
     try {
-      const session = await sessionHelpers.validateSession();
-      if (session) {
-        setUser(session.user);
-      } else {
-        setUser(null);
+      if (typeof window !== 'undefined') {
+        const session = localStorage.getItem('auth_session');
+        if (session) {
+          const parsedSession = JSON.parse(session);
+          if (parsedSession.user) {
+            setUser(parsedSession.user);
+          } else {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
       }
     } catch (error) {
       console.error('Error refreshing auth:', error);

@@ -1,24 +1,23 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Providers } from '../components/providers'
-import { Toaster } from '../components/ui/sonner'
-import '@/lib/init-db'
-import '@/app/globals.css'
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Providers } from '@/components/providers';
+import { Toaster } from '@/components/ui/sonner';
+import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Burnout Prevention App',
-  description: 'Track and prevent workplace burnout with personalized insights',
-}
+  title: 'Burnout Monitor - Your Wellness Companion',
+  description: 'AI-powered work-life balance monitoring to prevent burnout and promote well-being',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           {children}
@@ -26,5 +25,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  )
+  );
 }
