@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Brain, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '../../../hooks/AuthContext';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,21 +38,21 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError('');
+  // const handleGoogleLogin = async () => {
+  //   setIsLoading(true);
+  //   setError('');
 
-    try {
-      await loginWithGoogle();
-      toast.success('Successfully logged in with Google!');
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Google login failed. Please try again.');
-      toast.error('Google login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   try {
+  //     await loginWithGoogle();
+  //     toast.success('Successfully logged in with Google!');
+  //     router.push('/dashboard');
+  //   } catch (err: any) {
+  //     setError(err.message || 'Google login failed. Please try again.');
+  //     toast.error('Google login failed');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
@@ -158,7 +158,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button 
+            {/* <Button 
               variant="outline" 
               className="w-full h-11"
               onClick={handleGoogleLogin}
@@ -180,7 +180,7 @@ export default function LoginPage() {
                   <span>Continue with Google</span>
                 </div>
               )}
-            </Button>
+            </Button> */}
 
             <div className="text-center">
               <span className="text-sm text-gray-600">

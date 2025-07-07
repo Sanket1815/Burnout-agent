@@ -5,7 +5,7 @@ export interface User {
   email: string;
   name: string;
   avatar_url?: string;
-  created_at: string;
+  created_at: Date;
   settings: UserSettings;
 }
 
@@ -27,6 +27,15 @@ export interface UserSettings {
     sentiment_analysis: boolean;
     email_analysis: boolean;
   };
+}
+
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 }
 
 export interface BurnoutScore {
@@ -209,5 +218,116 @@ export interface UIState {
   };
   errors: {
     [key: string]: string | null;
+  };
+}
+
+// PostgreSQL specific types
+export interface AuthResult {
+  user: User;
+  token: string;
+}
+
+export interface Session {
+  user: User;
+  token: string;
+}
+
+// Database connection types
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  ssl?: boolean | object;
+  max?: number;
+  idleTimeoutMillis?: number;
+  connectionTimeoutMillis?: number;
+}
+
+// Error handling types
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+export class DatabaseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DatabaseError';
+  }
+}
+
+// Form validation types
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface FormState {
+  isValid: boolean;
+  errors: ValidationError[];
+  touched: { [key: string]: boolean };
+}
+
+// Theme types
+export type Theme = 'light' | 'dark' | 'system';
+
+// Navigation types
+export interface NavigationItem {
+  id: string;
+  label: string;
+  href: string;
+  icon?: string;
+  badge?: string | number;
+  children?: NavigationItem[];
+}
+
+// Modal and dialog types
+export interface ModalState {
+  isOpen: boolean;
+  type?: string;
+  data?: any;
+}
+
+// Pagination types
+export interface PaginationState {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+}
+
+// Filter and search types
+export interface FilterState {
+  search: string;
+  category?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Chart and visualization types
+export interface ChartDataPoint {
+  x: string | number;
+  y: number;
+  label?: string;
+  color?: string;
+}
+
+export interface ChartConfig {
+  type: 'line' | 'bar' | 'pie' | 'area' | 'scatter';
+  data: ChartDataPoint[];
+  options?: {
+    title?: string;
+    xAxisLabel?: string;
+    yAxisLabel?: string;
+    showLegend?: boolean;
+    colors?: string[];
   };
 }
