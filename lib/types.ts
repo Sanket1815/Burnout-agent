@@ -5,7 +5,7 @@ export interface User {
   email: string;
   name: string;
   avatar_url?: string;
-  created_at: string;
+  created_at: Date;
   settings: UserSettings;
 }
 
@@ -34,7 +34,6 @@ export interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
@@ -190,7 +189,11 @@ export interface WellnessInsight {
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
-  error?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
   meta?: {
     total?: number;
     page?: number;
