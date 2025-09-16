@@ -2,7 +2,7 @@
 
 A comprehensive AI-powered burnout detection system built with Next.js (frontend), FastAPI (backend), and PostgreSQL (database).
 
-## Features
+## Features:
 
 - **JWT Authentication**: Secure user authentication with signup/signin
 - **Real-time Burnout Analysis**: AI-powered analysis of work patterns, email stress, meeting load, and journal sentiment
